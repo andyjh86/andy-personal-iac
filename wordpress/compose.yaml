@@ -1,6 +1,6 @@
 ### This Docker Compose file runs WordPress + MySQL locally.
 ### If the password contains special characters (especially $), wrap it in single quotes,
-### e.g. 'Pa$$word'. Currently the passwords are in the format suggested by the instructions on the wordpress docker container
+### e.g. 'Pa$$word'. currently the passwords are in the format suggested by the instructions on the wordpress docker container
 
 services:
 
@@ -16,8 +16,8 @@ services:
       WORDPRESS_DB_NAME: exampledb #change the WordPress DB name here (must match MySQL db name - make sure indentation is the same)
     volumes:
       - wordpress:/var/www/html
-      #- ./wordpress:/var/www/html # (remove the # in the beginning of this line to put files in Windows directory)
-
+      #- ./wordpress:/var/www/html #(remove the # in the beginning of this line to put files in Windows directory)
+      #- ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini ###include this if using the altered upload file size settings in uploads.ini (same for windows and linux)
   db:
     image: mysql:8.0
     restart: always
