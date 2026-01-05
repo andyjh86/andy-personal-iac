@@ -1,0 +1,111 @@
+# =========================
+# Azure DevOps Pipeline YAML
+# =========================
+
+trigger:
+  - master
+
+pool:
+  name: self-hosted
+
+variables:
+  - group: static-web-app
+
+steps:
+  - checkout: self
+    clean: true
+
+  - task: PowerShell@2
+    displayName: "Deploy to Azure Static Web Apps"
+
+    inputs:
+      targetType: inline
+      script: |
+        Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+        
+        if (-not $env:AZURE_STATIC_WEB_APPS_API_TOKEN) {
+          throw "AZURE_STATIC_WEB_APPS_API_TOKEN is missing!"
+        }
+        
+        $sourcePath = "$(Build.SourcesDirectory)"
+        $stagingPath = "$(Agent.TempDirectory)\staging"
+        
+        # ----------------------------
+        # Find StaticSitesClient.exe dynamically
+        # ----------------------------
+        
+        $swaBasePath = "C:\WINDOWS\ServiceProfiles\NetworkService\.swa\deploy"
+        
+        $clientExe = Get-ChildItem -Path $swaBasePath -Filter "StaticSitesClient.exe" -Recurse -ErrorAction SilentlyContinue | 
+          Select-Object -First 1 -ExpandProperty FullName
+        
+        if (-not $clientExe) {
+          throw "StaticSitesClient.exe not found in $swaBasePath"
+        }
+        
+        Write-Host "Found StaticSitesClient at: $clientExe"
+        
+        # ----------------------------
+        # Create a clean staging folder
+        # ----------------------------
+        
+        if (Test-Path $stagingPath) {
+          Remove-Item -Path $stagingPath -Recurse -Force
+        }
+        
+        New-Item -ItemType Directory -Force -Path $stagingPath | Out-Null
+        
+        # ----------------------------
+        # Define exclusions (top-level only)
+        # ----------------------------
+        
+        $excludeList = @(
+          "azure-pipelines.yml",
+          "staticwebapp.config.json",
+          ".git",
+          ".gitignore",
+          "README.md"
+        )
+        
+        Write-Host "=== Copying files to staging (excluding sensitive files) ==="
+        
+        Get-ChildItem -Path $sourcePath | ForEach-Object {
+          if ($excludeList -notcontains $_.Name) {
+            Copy-Item -Path $_.FullName -Destination $stagingPath -Recurse -Force
+            Write-Host "  + $($_.Name)"
+          } else {
+            Write-Host "  - $($_.Name) (excluded)"
+          }
+        }
+        
+        Write-Host ""
+        Write-Host "=== Deploying from staging ==="
+        
+        Push-Location "$(Build.SourcesDirectory)"
+        
+        # ----------------------------
+        # Use splatting for safer parameter passing
+        # ----------------------------
+        
+        $params = @(
+          "upload"
+          "--app", $stagingPath
+          "--apiToken", $env:AZURE_STATIC_WEB_APPS_API_TOKEN
+          "--skipAppBuild"
+        )
+        
+        & $clientExe @params
+        
+        $exitCode = $LASTEXITCODE
+        
+        Pop-Location
+        
+        if ($exitCode -ne 0) {
+          throw "Deployment failed with exit code: $exitCode"
+        }
+        
+        Write-Host ""
+        Write-Host "Deployment successful!"
+
+    env:
+      AZURE_STATIC_WEB_APPS_API_TOKEN: $(AZURE_STATIC_WEB_APPS_API_TOKEN)
