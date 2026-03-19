@@ -1,0 +1,46 @@
+### This Docker Compose file runs WordPress + MySQL locally.
+### Integration: PHP upload limits are baked into WORDPRESS_CONFIG_EXTRA.
+### If the password contains special characters (especially $), wrap it in single quotes,
+### e.g. 'Pa$$word'. currently the passwords are in the format suggested by the instructions on the wordpress docker container
+
+services:
+
+  wordpress:
+    image: wordpress
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: exampleuser 
+      WORDPRESS_DB_PASSWORD: examplepass
+      WORDPRESS_DB_NAME: exampledb # change the WordPress DB name here
+      # Your integrated uploads.ini settings:
+      WORDPRESS_CONFIG_EXTRA: |
+        @ini_set( 'file_uploads', 'On' );
+        @ini_set( 'memory_limit', '256M' );
+        @ini_set( 'upload_max_filesize', '64M' );
+        @ini_set( 'post_max_size', '64M' );
+        @ini_set( 'max_execution_time', '300' );
+        @ini_set( 'max_input_time', '300' );
+    volumes:
+      - wordpress:/var/www/html
+      #- ./wordpress:/var/www/html #(remove the # in the beginning of this line to put files in Windows directory)
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: exampledb # change the MySQL DB name here (must match WordPress DB name)
+      MYSQL_USER: exampleuser
+      MYSQL_PASSWORD: examplepass 
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - db:/var/lib/mysql
+      # not a great idea on windows as windows can have issues, but would be:
+      # - ./dbdata:/var/lib/mysql
+      # mysql will be running in wsl2 via docker so it won't be very compatible going between files systems 
+
+volumes:
+  wordpress:
+  db:
