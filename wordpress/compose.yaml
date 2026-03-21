@@ -1,6 +1,7 @@
 ### This Docker Compose file runs WordPress + MySQL locally.
 ### If the password contains special characters (especially $), wrap it in single quotes,
 ### e.g. 'Pa$$word'. currently the passwords are in the format suggested by the instructions on the wordpress docker container
+### might not be the best idea to use $$$$ or unsafe SQL used characters in fields that are part of SQL DB
 
 services:
 
@@ -11,8 +12,8 @@ services:
       - 8080:80
     environment:
       WORDPRESS_DB_HOST: db
-      WORDPRESS_DB_USER: exampleuser 
-      WORDPRESS_DB_PASSWORD: examplepass
+      WORDPRESS_DB_USER: exampleuser ###change this --- must be the same as mysql user -
+      WORDPRESS_DB_PASSWORD: examplepass ###change this --- must be the same as mysql user -
       WORDPRESS_DB_NAME: exampledb #change the WordPress DB name here (must match MySQL db name - make sure indentation is the same)
     volumes:
       - wordpress:/var/www/html
@@ -23,9 +24,10 @@ services:
     restart: always
     environment:
       MYSQL_DATABASE: exampledb # change the MySQL DB name here (must match WordPress DB name)
-      MYSQL_USER: exampleuser
-      MYSQL_PASSWORD: examplepass 
-      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+      MYSQL_USER: exampleuser ##change this --- must be the same as mysql user -
+      MYSQL_PASSWORD: examplepass ###change this --- must be the same as mysql user -
+      MYSQL_RANDOM_ROOT_PASSWORD: '1' ###this generates a random mysql password in the logs for you to use. # it out and use below to set your own
+      #MYSQL_ROOT_PASSWORD: 'examplepassword' ###change this password if you want to set it in stone
     volumes:
       - db:/var/lib/mysql
       # not a great idea on windows as windows can have issues, but would be:
