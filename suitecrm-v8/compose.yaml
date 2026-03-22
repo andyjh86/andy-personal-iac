@@ -1,0 +1,38 @@
+services:
+  mariadb:
+    # Changed to bitnamilegacy to fix the "manifest unknown" error
+    image: docker.io/bitnamilegacy/mariadb:10.11
+    container_name: crm-database
+    environment:
+      - MARIADB_USER=suitecrm
+      - MARIADB_PASSWORD=password        # This is insecure and should be changed for production
+      - MARIADB_DATABASE=dbsuitecrm
+      - MARIADB_ROOT_PASSWORD=rootpassword    # Administrative password for the DB engine
+    volumes:
+      # Named volume: Podman manages the storage inside the Linux VM for better performance/permissions
+      - mariadb_data:/bitnami/mariadb:Z
+
+  suitecrm:
+    # Changed to bitnamilegacy to fix the "manifest unknown" error
+    image: docker.io/bitnamilegacy/suitecrm:8
+    container_name: crm-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SUITECRM_DATABASE_HOST=mariadb   # Matches the service name above
+      - SUITECRM_DATABASE_PORT_NUMBER=3306
+      - SUITECRM_DATABASE_USER=suitecrm          # Matches MARIADB_USER
+      - SUITECRM_DATABASE_PASSWORD=password      # Matches MARIADB_PASSWORD
+      - SUITECRM_DATABASE_NAME=dbsuitecrm        # Matches MARIADB_DATABASE
+      - SUITECRM_USERNAME=admin                  # Your SuiteCRM login username
+      - SUITECRM_PASSWORD=password               # Your SuiteCRM login password
+    volumes:
+      # Named volume: Keeps CRM files safe and compatible with the Bitnami non-root user
+      - suitecrm_data:/bitnami/suitecrm:Z
+    depends_on:
+      - mariadb
+
+# This section defines the managed volumes used above
+volumes:
+  mariadb_data:
+  suitecrm_data:
