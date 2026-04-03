@@ -1,0 +1,38 @@
+#=========================
+#crate folders and fix permissions first
+#sudo mkdir -p /opt/jellystat/db /opt/jellystat/backups
+#sudo chown -R $USER:$USER /opt/jellystat
+==========================
+
+
+version: '3'
+services:
+  jellystat-db:
+    image: 'docker.io/library/postgres:15.2'
+    container_name: jellystat-db
+    shm_size: 1gb
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jellystat				# [CHANGE if desired]
+      POSTGRES_PASSWORD: password			# [CHANGE for security]
+      POSTGRES_DB: jellystat
+    volumes:
+      - '/opt/jellystat/db:/var/lib/postgresql/data'
+
+  jellystat:
+    image: 'docker.io/cyfershepard/jellystat:latest'
+    container_name: jellystat				
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jellystat				# [MUST MATCH DB USER]
+      POSTGRES_PASSWORD: password			# [MUST MATCH DB PASS]
+      POSTGRES_IP: jellystat-db				
+      POSTGRES_PORT: 5432
+      JWT_SECRET: my-secret-jwt-key			# [CHANGE for security]
+      TZ: Australia/Brisbane
+    volumes:
+      - '/opt/jellystat/backups:/app/backend/backup-data'
+    ports:
+      - '3000:3000'
+    depends_on:
+      - jellystat-db
