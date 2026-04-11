@@ -5,6 +5,13 @@
 # 3. Media path: Verified as /mnt/mediashare (Proxmox mp0)
 # ================================================================
 
+#===============================================
+#As this is an lxc this may need to be run in the proxmox host to provide the correct permissions
+# Replace /mnt/pve/mediashare/media with the actual path on your Proxmox Host
+#chown -R 101000:101000 /mnt/pve/mediashare/media
+#chmod -R 775 /mnt/pve/mediashare/media
+#===============================================
+
 services:
   jellyfin:
     image: jellyfin/jellyfin
@@ -21,7 +28,7 @@ services:
       - /opt/jellyfin/config:/config
       - /opt/jellyfin/cache:/cache
       - /opt/jellyfin/data:/var/lib/jellyfin  #### This stores your database, users, and metadata
-      - '/mnt/mediashare:/media:ro'            #### Your Proxmox mp0 mount point (Read-Only for safety)
+      - '/mnt/mediashare:/media'            #### Your Proxmox mp0 mount point (Read-Only for safety) # Cange this to '/mnt/mediashare:/media:ro' for read only#
       
     devices:
       - /dev/dri:/dev/dri                      #### Required for Intel QuickSync Hardware Transcoding
