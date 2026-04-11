@@ -1,10 +1,9 @@
 # ================================================================
 # SETUP INSTRUCTIONS:
-# 1. Create folders: sudo mkdir -p /opt/jellyfin/config /opt/jellyfin/cache
+# 1. Create folders: sudo mkdir -p /opt/jellyfin/config /opt/jellyfin/cache /opt/jellyfin/data
 # 2. Set permissions: sudo chown -R 1000:1000 /opt/jellyfin
-# 3. Media path: Confirm /mnt/media/media server exists
+# 3. Media path: Verified as /mnt/mediashare (Proxmox mp0)
 # ================================================================
-
 
 services:
   jellyfin:
@@ -12,17 +11,25 @@ services:
     container_name: jellyfin
     user: 1000:1000
     network_mode: 'host'
-	#### Using 'host' mode allows DLNA/UPNP discovery so smart TVs can find the server automatically.
-	#### Note: In 'host' mode, the container shares the host's IP; the 'ports' section below is redundant.
+    #### Using 'host' mode allows DLNA/UPNP discovery so smart TVs can find the server automatically.
+    #### Note: In 'host' mode, the container shares the host's IP; the 'ports' section below is redundant.
     #ports:
-     # - "8096:8096"
-	 #### Port 8096 is open by default on the host IP because of 'network_mode: host'. (Leave these with the #)
+    #  - "8096:8096"
+    #  #### Port 8096 is open by default on the host IP because of 'network_mode: host'. (Leave these with the #)
+    
     volumes:
       - /opt/jellyfin/config:/config
       - /opt/jellyfin/cache:/cache
-      - '/mnt/media/media server:/media' ################ need to confirm storage location first
+      - /opt/jellyfin/data:/var/lib/jellyfin  #### This stores your database, users, and metadata
+      - '/mnt/mediashare:/media:ro'            #### Your Proxmox mp0 mount point (Read-Only for safety)
+      
+    devices:
+      - /dev/dri:/dev/dri                      #### Required for Intel QuickSync Hardware Transcoding
+      
     restart: 'unless-stopped'
+    
     environment:
-      - JELLYFIN_PublishedServerUrl=http://10.0.0.250 ########## change the IP address the same as the machine
+      - JELLYFIN_PublishedServerUrl=http://10.0.30.20 ########## Set to your LXC IP
+      
     extra_hosts:
       - "host.docker.internal:host-gateway"
