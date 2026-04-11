@@ -12,6 +12,11 @@
 #chmod -R 775 /mnt/pve/mediashare/media
 #===============================================
 
+#========================================
+#  Before starting this up verify that the user running Podman/Docker is UID 1000 in and in the video and render groups inside the LXC
+# sudo usermod -aG video,render $(whoami)
+#=================================
+
 services:
   jellyfin:
     image: jellyfin/jellyfin
