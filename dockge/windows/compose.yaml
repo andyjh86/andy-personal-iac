@@ -1,0 +1,14 @@
+services:
+  dockge:
+    image: louislam/dockge:1
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /c/dockge/data:/app/data
+      # Right side changed to /opt/dockge
+      - /c/dockge/stacks:/opt/dockge
+    environment:
+      # This must match the right side of the volume mapping above
+      - DOCKGE_STACKS_DIR=/opt/dockge
